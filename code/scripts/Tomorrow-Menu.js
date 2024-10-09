@@ -8,25 +8,14 @@ class UpdateMenu {
 
     let firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     
-    let currentWeek = Math.floor((today - firstDayOfMonth) / 604800000);
-    if (currentWeek < 0) {
-      currentWeek = 3;
-    } else {
-      currentWeek %= 4;
-    }
-    
+    let currentWeek = Math.floor((today - firstDayOfMonth) / (7 * 24 * 60 * 60 * 1000));
+    currentWeek = currentWeek % 4;
+
     let hostelSelect = document.getElementById("hostel").value;
-    let weekOffset = 0;
-    
-    if (hostelSelect === "S-LH 1-4") {
-      weekOffset = 1;
-    } else if (hostelSelect === "S-BH 1-12") {
-      weekOffset = 0;
-    }
-    
+    let weekOffset = hostelSelect === "S-LH 1-4" ? 1 : 0;
+
     currentWeek = (currentWeek + weekOffset) % 4;
     
-    // Calculate the tomorrow week
     let tomorrowWeek = (currentWeek + 1) % 4;
     
     const days = [
@@ -48,18 +37,10 @@ class UpdateMenu {
 
     let menuForTomorrow = menu.weeks[tomorrowWeek].days[tomorrowDay];
 
-    // Update the UI with the menu for tomorrow
-    let id1 = document.getElementById("breakfast");
-    id1.innerHTML = `${menuForTomorrow.BREAKFAST.toLowerCase()}`;
-
-    let id2 = document.getElementById("lunch");
-    id2.innerHTML = `${menuForTomorrow.LUNCH.toLowerCase()}`;
-
-    let id3 = document.getElementById("snacks");
-    id3.innerHTML = `${menuForTomorrow.SNACKS.toLowerCase()}`;
-
-    let id4 = document.getElementById("dinner");
-    id4.innerHTML = `${menuForTomorrow.DINNER.toLowerCase()}`;
+    document.getElementById("breakfast").innerHTML = `${menuForTomorrow.BREAKFAST.toLowerCase()}`;
+    document.getElementById("lunch").innerHTML = `${menuForTomorrow.LUNCH.toLowerCase()}`;
+    document.getElementById("snacks").innerHTML = `${menuForTomorrow.SNACKS.toLowerCase()}`;
+    document.getElementById("dinner").innerHTML = `${menuForTomorrow.DINNER.toLowerCase()}`;
   }
 
   updateMenu(menu) {
@@ -69,14 +50,7 @@ class UpdateMenu {
 
   scheduleNextUpdate(menu) {
     let now = new Date();
-    let midnight = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate() + 1,
-      0,
-      0,
-      0
-    );
+    let midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
     let timeUntilMidnight = midnight - now;
 
     setTimeout(() => {
@@ -85,12 +59,16 @@ class UpdateMenu {
     }, timeUntilMidnight);
   }
 }
+
 document.addEventListener("DOMContentLoaded", function () {
   let hostelSelect = document.getElementById("hostel");
   let previousHostel = localStorage.getItem("selectedHostel");
 
-  if (previousHostel) hostelSelect.value = previousHostel;
-  else hostelSelect.value = "S-BH 1-12"; // default value
+  if (previousHostel) {
+    hostelSelect.value = previousHostel;
+  } else {
+    hostelSelect.value = "S-BH 1-12";
+  }
   hostelSelect.dispatchEvent(new Event("change"));
 });
 
@@ -109,9 +87,8 @@ tomorrowLabel.addEventListener("click", () => {
   xhr.onload = () => {
     if (xhr.status >= 200 && xhr.status < 300) {
       let menu = JSON.parse(xhr.responseText);
-      // Update the menu display
       let update = new UpdateMenu();
-      update.updateMenu(menu); // Call the updateMenu method
+      update.updateMenu(menu);
       asideElement.classList.remove("loading");
     } else {
       console.log("Error fetching the data: ", xhr.statusText);
